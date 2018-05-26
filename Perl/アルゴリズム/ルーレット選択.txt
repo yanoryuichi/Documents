@@ -1,0 +1,63 @@
+﻿# ルーレット選択
+
+- ある集合の要素はそれぞれ重みを持っている。
+- 例えばそれぞれの重みが @rate = (60,30,10) だとして、それぞれに対して累計 @total = (60,90,100) を求める。
+- それぞれの累計の値は、それぞれの要素の数直線上の値を表すと考えると良い。
+- 次に累計の範囲内でランダムな値を決め、それぞれの累計の値と比較すれば、対応する要素が求まる。
+- 以下のroulette1()/roulette2()はその実装。
+
+```clike
+#!/usr/local/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+my @rate = (60,30,10);
+
+my @result1;
+foreach ( 1 .. 100000 ) {
+    my $idx = roulette1(@rate);
+    $result1[$idx]++;
+}
+print Dumper \@result1;
+
+my @result2;
+foreach ( 1 .. 100000 ) {
+    my $idx = roulette2(@rate);
+    $result2[$idx]++;
+}
+print Dumper \@result2;
+
+sub roulette1 {
+    my @rate = @_;
+    my @total;
+    $total[0] = $rate[0];
+    for ( my $i = 1 ; $i < @rate ; $i++ ) {
+        $total[$i] = $total[ $i - 1 ] + $rate[$i];
+    }
+    my $rand = int( rand( $total[ @total - 1 ] ) ) + 1;
+    my $idx  = 0;
+    while ( $rand > $total[$idx] ) {
+        $idx++;
+    }
+    return $idx;
+}
+
+sub roulette2 {
+    my @rate = @_;
+    my $total;
+    foreach my $n (@rate) {
+        $total += $n;
+    }
+    my $rand = int( rand($total) ) + 1;
+    my $idx = 0;
+    for ( ; $idx < @rate ; $idx++ ) {
+        $rand -= $rate[$idx];
+        if ( $rand <= 0 ) {
+            last;
+        }
+    }
+    return $idx;
+}
+```

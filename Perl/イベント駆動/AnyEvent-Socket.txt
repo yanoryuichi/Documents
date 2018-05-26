@@ -1,0 +1,100 @@
+﻿# AnyEvent::Socket
+
+```clike
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use 5.012;
+use AnyEvent;
+use AnyEvent::Socket;
+use AnyEvent::Handle;
+my ($target_host, $target_port, $connection_num) = @ARGV;
+if (!$target_host || !$target_port || !$connection_num) {
+    usage();
+}
+my @pids;
+foreach my $n ( 1 .. 10 ) {
+    my $pid = fork;
+    if ($pid) {
+        push @pids, $pid;
+    }
+    else {
+        do_task();
+    }
+}
+if (@pids) {
+    $SIG{INT} = sub {
+        foreach my $pid (@pids) {
+            kill( 2, $pid );
+        }
+        exit 0;
+    };
+    while (1) {}
+}
+sub usage {
+    say "usage) $0 HOST PORT CONNECTION_NUM";
+    exit 1;
+}
+sub do_task {
+    my $cv = AnyEvent->condvar;
+    $cv->cb(
+        sub {
+            say "EXIT: $$";
+            exit 0;
+        }
+    );
+    my %count;
+    my @fh;
+    foreach my $n (1.. ($connection_num / 10 || 1)) {
+        $count{$n} = 0;
+        $cv->begin;
+        my $timer;
+        $timer = AnyEvent->timer(
+            after    => 0,
+            interval => 0.1,
+            cb       => sub {
+                tcp_connect $target_host, $target_port, sub {
+                    my ($fh) = @_;
+                    if ( !$fh ) {
+                        say "NG: $$ #$n";
+                        return;
+                    }
+                    my $handle;
+                    $handle = AnyEvent::Handle->new(
+                        fh       => $fh,
+                        on_error => sub {
+                            say "NG: $$ #$n";
+                            $handle->destroy;
+                            $cv->end;
+                        }
+                    );
+                    my $chunk = '-' x 10;
+                    $handle->push_write(sprintf"set $$-%s 0 0 %d\015\012", $count{$n}, length($chunk));
+                    $handle->push_write(sprintf("%s\015\012", $chunk));
+                    $handle->push_write("stats\015\012");
+                    $handle->push_read(
+                        line => 'END',
+                        sub {
+                            my ( $handle, $line ) = @_;
+                            my $curr_conn;
+                            eval {
+                                my $buf = ( grep { /^STAT curr_connections/ } ( split "\n", $line ) )[0];
+                                $curr_conn = ( split ' ', $buf )[2];
+                            };
+                            say "OK $$ #$n ${curr_conn}conns";
+                            $handle->destroy;
+                            #$cv->end;
+                          }
+                    );
+                    if ( $count{$n}++ > 3000 ) {
+                        say "FIN: $$ #$n";
+                        $cv->end;
+                        undef $timer;
+                    }
+                }, sub { 1 };
+            }
+        );
+    }
+    $cv->recv;
+}
+```

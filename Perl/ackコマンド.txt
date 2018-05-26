@@ -1,0 +1,111 @@
+﻿# ackコマンド
+
+## インストール
+
+- CPANモジュールとしてインストールするか、シングルファイル（Perlスクリプトファイル）をダウンロードしてパスを通すか。
+- http://beyondgrep.com/install/
+
+## ファイル構成
+
+```clike
+.
+|-- 1.csv
+|-- 1.pl
+|-- 1.rb
+|-- dir_a
+|   |-- 1.csv
+|   `-- 1.pl
+`-- dir_b
+    `-- 1.pl
+
+2 directories, 6 files
+```
+
+## 文字列を検索する
+
+```clike
+$ ack 'perl' .
+1.pl
+1:#!/usr/bin/perl
+
+dir_b/1.pl
+1:#!/usr/bin/perl
+
+dir_a/1.pl
+1:#!/usr/bin/perl
+```
+
+## すべてのファイルタイプを対象にする
+
+```clike
+$ ack -a perl .
+1.pl
+1:#!/usr/bin/perl
+
+1.csv
+1:perl,ruby,bash
+
+dir_b/1.pl
+1:#!/usr/bin/perl
+
+dir_a/1.pl
+1:#!/usr/bin/perl
+
+dir_a/1.csv
+1:perl,ruby,bash
+```
+
+## ファイルタイプを指定する
+
+```clike
+$ ack --type=ruby usr .
+1.rb
+1:#!/usr/bin/ruby
+```
+
+## ファイルタイプを除外指定する
+
+```clike
+$ ack --type=noruby usr
+1.pl
+1:#!/usr/bin/perl
+
+dir_b/1.pl
+1:#!/usr/bin/perl
+
+dir_a/1.pl
+1:#!/usr/bin/perl
+```
+
+## ファイルパスに条件を付ける
+
+```clike
+$ ack -G _a perl .
+dir_a/1.pl
+1:#!/usr/bin/perl
+```
+
+## マッチしたファイルのファイル名のみを表示する
+
+```clike
+$ ack -l perl .
+1.pl
+dir_b/1.pl
+dir_a/1.pl
+```
+
+## マッチしなかったファイルのファイル名のみを表示する
+
+```clike
+$ ack -L perl .
+1.rb
+```
+
+## ファイル名一覧の区切りを（改行ではなく）ヌル文字にする
+
+```clike
+ack -l --print0 perl . | xargs -0 rm -rf {}
+```
+
+## 参考
+http://search.cpan.org/perldoc?ack

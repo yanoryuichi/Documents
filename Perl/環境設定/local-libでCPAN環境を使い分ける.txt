@@ -1,0 +1,57 @@
+﻿# local::libでCPAN環境を使い分ける
+
+## local::libのダウンロード・インストール
+ここでは$HOME/tmp/cpanにディレクトリーツリーを作る事にする。
+
+```clike
+wget http://search.cpan.org/CPAN/authors/id/A/AP/APEIRON/local-lib-1.008004.tar.gz
+tar zxvf local-lib-1.008004.tar.gz
+cd local-lib-1.008004
+perl Makefile.PL --bootstrap=$HOME/tmp/cpan
+make
+make test
+make install
+```
+
+## local::libで指定したCPANディレクトリツリー以下にCPANモジュールをインストールする
+### cpanmコマンドでモジュールインストールする場合
+
+```clike
+cpanm --local-lib=$HOME/tmp/cpan Time::Piece
+```
+
+### cpanコマンドでモジュールをインストールする場合
+以下のコマンドを実行し、
+
+```clike
+perl -I$HOME/tmp/cpan/lib/perl5 -Mlocal::lib=$HOME/tmp/cpan
+```
+
+以下の出力内容を.bashrcに登録する等して環境変数を整備する。
+
+```clike
+export PERL_LOCAL_LIB_ROOT="/home/taro/tmp/cpan";
+export PERL_MB_OPT="--install_base /home/taro/tmp/cpan";
+export PERL_MM_OPT="INSTALL_BASE=/home/taro/tmp/cpan";
+export PERL5LIB="/home/taro/tmp/cpan/lib/perl5/darwin-2level:/home/taro/tmp/cpan/lib/perl5";
+export PATH="/home/taro/tmp/cpan/bin:$PATH";
+```
+
+## local::libで指定したCPANディレクトリツリー以下にCPANモジュールを使用する
+
+```clike
+#!/usr/bin/perl
+ 
+use strict;
+use warnings;
+ 
+use lib '/home/taro/tmp/cpan/lib/perl5/'; # (1)
+use local::lib '/home/taro/tmp/cpan';     # (2)
+use Time::Piece;
+```
+
+方法は3つ。
+
+- (1)のようにlibプラグラマでライブラリサーチパスを直接指定する。
+- local::libを標準CPANディレクトリーツリーにインストールしているのなら、(2)のようにlocal::libプラグマで指定する。
+- Perlの実行ユーザの環境変数PERL5LIBをPERL5LIB="/home/taro/tmp/cpan/lib/perl5/darwin-2level:/home/taro/tmp/cpan/lib/perl5"のように指定する。

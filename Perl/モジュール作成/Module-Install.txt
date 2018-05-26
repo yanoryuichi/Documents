@@ -1,0 +1,36 @@
+﻿# Module::Install
+
+### lib/Foo/Bar.pm
+
+```clike
+package Foo::Bar;
+our $VERSION = '0.001';
+1;
+```
+
+### Makefile.PL
+
+```clike
+use strict;
+use inc::Module::Install;
+
+name('Foo-Bar');
+all_from('lib/Foo/Bar.pm');
+
+WriteAll;
+```
+
+### t/00_compile.t
+
+```clike
+use strict;
+use Test::More tests => 1;
+
+use_ok('Foo::Bar');
+```
+
+## 参考
+
+- http://search.cpan.org/perldoc?Module::Install
+- [[モダンPerlの世界へようこそ 第23回　Module::Build：MakeMakerの後継者を目指して>http://gihyo.jp/dev/serial/01/modern-perl/0023]]
+- [[モダンPerlの世界へようこそ 第25回　Module::Starter：モジュールを書くためのテンプレート>http://gihyo.jp/dev/serial/01/modern-perl/0025]]

@@ -1,0 +1,8 @@
+﻿# ファイルの内容を読み込む
+
+```clike
+use Path::Class qw/file/;
+my $contents = file('/homo/taro/foo.txt')->slurp(iomode => '<:encoding(euc-jp)');
+```
+
+http://search.cpan.org/perldoc?Path::Class::File

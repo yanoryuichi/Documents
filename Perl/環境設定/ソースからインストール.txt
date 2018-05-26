@@ -1,0 +1,23 @@
+﻿# Perlをソースからインストール
+
+## コンパイル・インストール
+
+```clike
+# http://www.perl.org/get.html
+wget http://www.cpan.org/src/5.0/perl-5.12.2.tar.gz
+tar zxvf perl-5.12.2.tar.gz
+cd perl-5.12.2
+sh Configure -des -Dprefix=$HOME/opt/perl
+make 
+make test
+make install
+```
+
+## .bashrc
+
+```clike
+export PATH=$HOME/opt/perl5/bin:$HOME/bin:$PATH
+```
+
+## 参考
+http://search.cpan.org/perldoc?Install

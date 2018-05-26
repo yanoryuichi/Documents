@@ -1,0 +1,38 @@
+﻿# Net::SMTPによるメール送信
+
+```clike
+sub send_mail {
+   my (%arg) = @_;
+   my $from = sprintf '"%s"<%s>',
+       jcode($arg{from_name})->mime_encode(),
+       $arg{from_mail};
+   my @to = (ref $arg{to_mail} eq 'ARRAY')? @{$arg{to_mail}} : ($arg{to_mail});
+   my $to = join ',', @to;
+   my $subject = Jcode->new($arg{subject},'euc')->mime_encode();
+   my $dt = DateTime->now();
+   my $date = sprintf "%s, %d %s %04d %02d:%02d:%02d +0900 (JST)",
+       $dt->day_abbr, $dt->day, $dt->month_abbr, $dt->year,
+       $dt->hour, $dt->minute, $dt->second;
+   my $mesg = Jcode->new($arg{mesg},'euc')->jis;
+       
+   my $smtp = Net::SMTP->new('localhost');
+       
+   $smtp->mail($from);
+   $smtp->to($to);
+       
+   # ヘッダ
+   $smtp->data();
+   $smtp->datasend("Date: $date\n");
+   $smtp->datasend("From: $from\n");
+   $smtp->datasend("To: $to\n");
+   $smtp->datasend("Subject: $subject\n");
+   $smtp->datasend("Content-Transfer-Encoding: 7bit\n");
+   $smtp->datasend("Content-Type: text/plain;charset=\"ISO-2022-JP\"\n\n");
+   $smtp->datasend("\n");
+   # 本文
+   $smtp->datasend("$mesg\n");
+   # メール送信
+   $smtp->dataend();
+   $smtp->quit;
+}
+```

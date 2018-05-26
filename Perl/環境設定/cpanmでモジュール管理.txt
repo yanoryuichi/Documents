@@ -1,0 +1,10 @@
+﻿# cpanmでモジュール管理
+cpanmは、cpanコマンドを代替する、cpanモジュール管理の為のコマンド。
+
+## インストール
+
+```clike
+curl -LO -k http://xrl.us/cpanm
+cp cpanm $HOME/bin/
+chmod a+x $HOME/bin/cpanm
+```

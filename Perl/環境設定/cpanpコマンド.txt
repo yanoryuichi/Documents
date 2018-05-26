@@ -1,0 +1,24 @@
+﻿# cpanpコマンド
+
+## 古いバージョンをインストールする
+
+```clike
+CPAN Terminal> f Catalyst::Runtime
+
+ 1 Catalyst::Runtime                          2009-11-22   5.80014  BOBTFISH
+ 2 Catalyst::Runtime                          2009-12-01   5.80014  BOBTFISH
+ 3 Catalyst::Runtime                          2009-12-02   5.80015  BOBTFISH
+ 4 Catalyst::Runtime                          2009-12-11   5.80016  BOBTFISH
+ 5 Catalyst::Runtime                          2010-03-03   5.80021  BOBTFISH
+
+CPAN Terminal> i 3
+
+Installing Catalyst::Runtime (5.80015)
+...
+```
+
+## 依存するモジュールを自動的にインストール
+
+```clike
+s conf prereqs 1; s save
+```

@@ -1,0 +1,87 @@
+﻿# ビット演算による権限制御
+
+```clike
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.012;
+
+# 権限を設定
+my $none    = 0x0;
+my $read    = 0x1 << 0;
+my $write   = 0x1 << 1;
+my $execute = 0x1 << 2;
+my $extra   = 0x1 << 3;
+
+# 権限を付与
+my $all = $none | $read | $write | $execute;
+
+# 権限をはく奪
+my $not_all = $all & ~$read;
+
+my %actions = (
+    +read    => $read,
+    +write   => $write,
+    +execute => $execute,
+    +extra   => $extra,
+);
+
+# 権限を2進数で確認
+printf( "%- 10s%04b\n", "none",    $none );     # none      0000
+printf( "%- 10s%04b\n", "read",    $read );     # read      0001
+printf( "%- 10s%04b\n", "write",   $write );    # write     0010
+printf( "%- 10s%04b\n", "execute", $execute );  # execute   0100
+printf( "%- 10s%04b\n", "extra",   $extra );    # extra     1000
+printf( "%- 10s%04b\n", "all",     $all );      # all       0111
+printf( "%- 10s%04b\n", "not_all", $not_all );  # not_all   0110
+
+say '';
+
+# 各権限の内容を確認
+if (($all & $read) != 0) {           
+    say "all can read ? => OK";                 # all can read ? => OK
+} else {                             
+    say "all can read ? => NG";      
+}                                    
+                                     
+if (($write & $read) != 0) {         
+    say "write can read ? => OK";               # write can read ? => NG
+} else {                             
+    say "write can read ? => NG";    
+}                                    
+                                     
+if (($not_all & $read) != 0) {       
+    say "not_all can read ? => OK";             # not_all can read ? => NG
+} else {                             
+    say "not_all can read ? => NG";  
+}
+
+if (($not_all & $write) != 0) {       
+    say "not_all can write ? => OK";             # not_all can write ? => OK
+} else {                             
+    say "not_all can write ? => NG";  
+}
+
+say '';
+
+while ( my ( $k, $v ) = each %actions ) {       # all can execute ? => OK
+    if ( ( $all & $v ) != 0 ) {                 # all can read ? => OK
+        say "all can $k ? => OK";               # all can extra ? => NG
+    }                                           # all can write ? => OK
+    else {                                
+        say "all can $k ? => NG";         
+    }                                     
+}                                         
+
+say '';
+
+while ( my ( $k, $v ) = each %actions ) {       # extra can execute ? => NG
+    if ( ( $extra & $v ) != 0 ) {               # extra can read ? => NG
+        say "extra can $k ? => OK";             # extra can extra ? => OK
+    }                                           # extra can write ? => NG
+    else {
+        say "extra can $k ? => NG";
+    }
+}
+```

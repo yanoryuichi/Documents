@@ -1,0 +1,429 @@
+﻿# CGI::Application
+
+昔書いたCGI::Applicationのプログラムの一部です。途中で開発を止めちゃったので、ちゃんと動かないかも。
+CGI::Applicationは低機能ですが、その分全体の把握が簡単です。
+CGI::Applicationを使う時の参考になるかな？
+
+## 基本構造
+CGI::Applicationはディスパッチャー程度しか提供しないので、コントローラやモデルの構造は自己流です。ま、よくある一般的な構造にしてあります。
+
+- htdocs/dispatch.cgi フロントコントローラ
+- config/config.pl 設定ファイル
+- lib/C.pm 基底コントローラクラス
+- lib/C/Inquiry.pm Inquiryコントローラクラス
+- lib/M.pm 基底モデルクラス
+- lib/M/Account.pm Account関連モデルクラス
+- template/inquiry/index.tt HTMLテンプレートファイル（Inquiryのindexアクション用）
+
+## ソースコード
+
+### htdocs/dispatch.cgi
+
+```clike
+#!/usr/bin/perl
+# ==============================================================================
+#  フロントコントローラ
+# ==============================================================================
+use strict;
+use warnings;
+use FindBin qw($Bin);
+use Cwd 'abs_path';
+use lib (
+    "$Bin/../../admin_app/lib",
+);
+use CGI::Carp qw(carpout);
+use CGI::Application::Dispatch;
+
+# ログファイル書き出し
+umask 000;
+open my $log, '>>', "$Bin/../../admin_app/logs/cgi_log" or die $!;
+carpout($log);
+
+# URL修正
+chdir $Bin;
+my $www = abs_path;
+$ENV{PATH_INFO} =~ s/^$www//g if defined $ENV{PATH_INFO};
+
+# アプリケーション実行
+CGI::Application::Dispatch->dispatch(
+    prefix  => 'C',
+    default => 'Index',
+    debug   => 1,
+);
+close $log;
+exit;
+```
+
+### config/config.pl
+
+```clike
+#!/usr/bin/perl
+
+$CFG{site_name} = 'portal';
+$CFG{base_url} = 'http://example.com';
+$CFG{db} = {
+    dsn => 'DBI:mysql:database=mydb;host=localhost;',
+    user => 'db_user',
+    passwd => 'db_pass',
+};
+$CFG{debug} = 1;
+
+\%CFG;
+```
+
+### lib/C.pm
+
+```clike
+# ==============================================================================
+# コントローラ
+# ==============================================================================
+package C;
+
+use strict;
+use warnings;
+use base 'CGI::Application';
+use FindBin qw/$Bin/;
+use CGI::Application::Plugin::Forward;
+use CGI::Application::Plugin::Redirect;
+use CGI::Application::Plugin::BrowserDetect;
+use CGI::Application::Plugin::TT;
+use CGI::Application::Plugin::LogDispatch;
+use CGI::Application::Plugin::Session;
+use CGI::Application::Plugin::FillInForm (qw/fill_form/);
+use CGI::Application::Plugin::ConfigAuto (qw/cfg cfg_file/);
+use CGI::Application::Plugin::MessageStack;
+use CGI::Application::Plugin::Authentication;
+use CGI::Application::Plugin::Authorization;
+#use CGI::Application::Plugin::DebugScreen;
+use CGI::Application::Plugin::DBH (qw/dbh_config dbh/);
+use M::Account;
+use Data::Dumper;
+
+sub cgiapp_init {
+    my $self = shift;
+    $ENV{CGI_APP_DEBUG} = 1;
+    # コンフィグファイル読み込み
+    $self->cfg_file("$Bin/../../admin_app/config/config.pl");
+    # DB接続
+    my $db_config = $self->cfg('db');
+    $self->dbh_config( $db_config->{dsn}, $db_config->{user},
+        $db_config->{passwd},
+        { RaiseError => 1, AutoCommit => 1, PrintError => 0 } );
+    # Template Toolkit 初期化
+    $self->tt_config(
+        TEMPLATE_OPTIONS => { INCLUDE_PATH => "$Bin/../../admin_app/template" } );
+    # セッション設定
+    $self->session_config(
+        DEFAULT_EXPIRY => '+1w',
+        COOKIE_PARAMS  => { -expires => '+24h' },
+        SEND_COOKIE    => 1,
+    );
+    # MessageStack 設定
+    $self->capms_config( -automatic_clearing => 1, );
+    # デバッグログ設定
+    $self->log_config(
+        LOG_DISPATCH_MODULES => [
+            {
+                module         => 'Log::Dispatch::File',
+                name           => 'debug',
+                filename       => "$Bin/../../admin_app/logs/debug_log",
+                min_level      => 'debug',
+                stderr         => 1,
+                append_newline => 1,
+            },
+        ]
+    );
+    # Authentication 設定
+    my $url = $self->query->url( -base => 1 );
+    my $account = $self->model('M::Account');
+    $self->authen->config(
+        DRIVER => [
+            'Generic',
+            sub {
+                my ( $login_id, $passwd ) = @_;
+                my $info = $account->check_passwd( $login_id, $passwd );
+                if ($info) {
+                    return $info || 'N/A';
+                }
+                else {
+                    $self->push_message(-message => 'ログインエラー：ユーザーID・パスワードを確認して下さい。');
+                    $self->redirect("$url/admin/login");
+                    return;
+                }
+              }
+        ],
+        STORE          => 'Session',
+        CREDENTIALS    => [ 'authn_login_id', 'authn_passwd' ],
+        LOGIN_URL      => "$url/admin/login",
+        POST_LOGIN_URL => "$url/admin/regular-id",
+    );
+    # Authorization 設定
+    $self->authz->config( DRIVER => [ 'Generic', sub {
+        my ( $user_info, $group) = @_;
+        return $user_info->{$group} ? 1 : 0;
+        
+    } ],
+        FORBIDDEN_RUNMODE => 'forbidden',
+        #FORBIDDEN_URL => "$url/login",
+    );
+    # 共通 run mode の設定
+    $self->run_modes([qw/forbidden/]);
+}
+
+sub cgiapp_prerun {
+    my $self      = shift;
+    $self->header_add( -type => 'text/html; charset=UTF-8' );
+}
+
+sub cgiapp_postrun {
+    my $self       = shift;
+    my $output_ref = shift;
+}
+
+sub forbidden {
+    my $self = shift;
+    $self->push_message(
+        -message => '権限がありません。権限のあるアカウントでログインし直してください。',
+    );
+    my $url = $self->query->url( -base => 1 );
+    $self->redirect("$url/admin/login");
+}
+
+# ------------------------------------------------------------------------------
+# モデルクラスオブジェクト呼び出し
+# ------------------------------------------------------------------------------
+sub model {
+    my $self  = shift;
+    my $model = shift;
+    my $obj = eval { $model->new( dbh => $self->dbh, cfg => { $self->cfg } ) };
+    die $@ if $@;
+    return $obj;
+}
+
+1;
+```
+
+### lib/M.pm
+
+```clike
+package M;
+use strict;
+use warnings;
+use Data::Dumper;
+
+sub new {
+    my $class = shift;
+    return bless { @_ }, $class;
+}
+
+sub dbh {
+    my $self = shift;
+    return $self->{dbh};
+}
+
+1;
+```
+
+### lib/C/Inquiry.pm
+
+```clike
+package C::Inquiry;
+use strict;
+use warnings;
+use base 'C';
+
+sub setup {
+    my $self = shift;
+    $self->start_mode('index');
+    $self->run_modes([qw/
+        index
+        confirm
+        finish
+    /]);
+}
+
+sub index {
+    my $self = shift;
+    # テンプレートを呼び出す
+    return $self->tt_process('inquiry/index.tt');
+}
+
+sub confirm {
+    my $self = shift;
+    # フォームパラメータから取り出し
+    my $name = $self->query->param('name');
+    my $age = $self->query->param('age');
+    # セッションに入れる
+    $self->session->param('name',$name);
+    $self->session->param('age',$age);
+    # テンプレートを呼び出し、名前と年齢を差し込む
+    return $self->tt_process('inquiry/confirm.tt', { name => $name, age => $age });
+}
+
+sub finish {
+    my $self = shift;
+    # セッションから取り出し
+    my $name = $self->session->param('name');
+    # テンプレートを呼び出し、名前を差し込む
+    return $self->tt_process('inquiry/finish.tt', { name => $name });
+}
+
+1;
+```
+
+### lib/M/Account.pm
+
+```clike
+# ==============================================================================
+# アカウントモデル
+# ==============================================================================
+package M::Account;
+use strict;
+use warnings;
+use base 'M';
+use Data::Dumper;
+
+# ------------------------------------------------------------------------------
+# 一覧取得
+# ------------------------------------------------------------------------------
+sub get_list {
+    my $self = shift;
+    my $ref = $self->dbh->selectall_arrayref(
+        "SELECT *, 
+            CASE department WHEN 1 THEN 'SALES' WHEN 2 THEN 'TECH' WHEN 3 THEN 'BACKOFFICE' ELSE 'N/A' END AS department_desc
+         FROM account ORDER BY account_id",
+        { Columns => {} }
+    );
+    return @$ref;
+}
+
+# ------------------------------------------------------------------------------
+# 一覧取得2
+# 一覧をハッシュで取得する
+# ------------------------------------------------------------------------------
+sub get_list2 {
+    my $self = shift;
+    my @list = $self->get_list;
+    my %result;
+    foreach my $tmp (@list) {
+        # ハッシュのキーにアカウントIDを含める
+        my $aid = $tmp->{account_id};
+        $result{"login_id_$aid"}          = $tmp->{login_id};
+        $result{"passwd_$aid"}            = $tmp->{passwd};
+        $result{"name_$aid"}              = $tmp->{name};
+        $result{"department_$aid"}        = $tmp->{department};
+        $result{"temp_id_manage_$aid"}    = $tmp->{temp_id_manage};
+        $result{"regular_id_manage_$aid"} = $tmp->{regular_id_manage};
+        $result{"bbs_manage_$aid"}        = $tmp->{bbs_manage};
+        $result{"account_manage_$aid"}    = $tmp->{account_manage};
+    }
+    return %result;
+}
+
+# ------------------------------------------------------------------------------
+# 追加
+# ------------------------------------------------------------------------------
+sub add {
+    my $self = shift;
+    my %data = %{shift()};
+    my $sql = sprintf(
+        "INSERT INTO account ( %s, update_date )\n VALUES ( %s, now() )",
+        join( ', ', keys %data ),
+        join( ', ', map { '?' } keys %data )
+    );
+    eval {
+        $self->dbh->do($sql,{},values %data);
+    };
+    die "DB ERR: $@\n$sql\n", Dumper \%data if $@;
+}
+
+# ------------------------------------------------------------------------------
+# 削除
+# ------------------------------------------------------------------------------
+sub delete {
+    my $self = shift;
+    my $account_id = shift;
+    my $sql = "DELETE FROM account WHERE account_id = ?";
+    eval {
+        $self->dbh->do( $sql, {}, ($account_id) );
+    };
+    die "DB ERR: $@\n$sql\n", $account_id if $@;
+}
+
+# ------------------------------------------------------------------------------
+# 更新
+# ------------------------------------------------------------------------------
+sub update {
+    my $self = shift;
+    my %data = %{shift()};
+    my $account_id = $data{account_id};
+    delete $data{account_id};
+    my $sql = sprintf( "UPDATE account SET %s WHERE account_id = ?",
+        join( ', ', ( map { $_ . ' = ?' } keys %data ) ) );
+    eval { $self->dbh->do( $sql, {}, ( values %data, $account_id ) ); };
+    die "DB ERR: $@\n$sql\n", Dumper \%data if $@;
+}
+
+# ------------------------------------------------------------------------------
+# パスワードチェック
+# ------------------------------------------------------------------------------
+sub check_passwd {
+    my $self = shift;
+    my ( $login_id, $passwd ) = @_;
+    my $ref = $self->dbh->selectrow_hashref(
+        'SELECT * FROM account WHERE login_id = ? AND passwd = ?',
+        {},
+        ( $login_id, $passwd )
+    );
+    return $ref;
+}
+
+# ------------------------------------------------------------------------------
+# ログインIDが存在しているか
+# ------------------------------------------------------------------------------
+sub login_id_exists {
+    my $self     = shift;
+    my $login_id = shift;
+    my $ref = $self->dbh->selectrow_arrayref(
+        'SELECT COUNT(*) FROM account WHERE login_id = ? ',
+        {},
+        ( $login_id )
+    );
+    return $ref->[0];
+    
+}
+
+1;
+```
+
+### template/inquiry/index.tt
+
+```clike
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>管理画面</title>
+<link href="/admin/css/base.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div>
+<div id="main">
+<!--ヘッダー-->
+[% INCLUDE 'common/header.tt' %]
+<!--/ヘッダー-->
+<!--メインコンテンツ-->
+<form action="/admin/inquiry/confirm" method="post">
+名前：<input name="name" type="text"><br>
+年齢：<input name="age" type="text"><br>
+<input type="submit" value="確認する" style="height:1.5em;font-size:small">
+</form>
+<!--/メインコンテンツ-->
+<!--フッター-->
+[% INCLUDE 'common/footer.tt' %]
+<!--/フッター-->
+</div>
+</div>
+</body>
+</html>
+```

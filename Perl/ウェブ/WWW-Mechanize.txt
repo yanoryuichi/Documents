@@ -1,0 +1,6 @@
+﻿# WWW-Mechanize
+
+- http://search.cpan.org/perldoc?HTML%3A%3ATreeBuilder
+- http://search.cpan.org/perldoc?HTML%3A%3AElement
+- http://search.cpan.org/perldoc?WWW%3A%3AMechanize
+- http://stackoverflow.com/questions/19271173/perl-dom-mechanize-xpath

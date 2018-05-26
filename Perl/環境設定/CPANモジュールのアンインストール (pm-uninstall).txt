@@ -1,0 +1,3 @@
+﻿# CPANモジュールのアンインストール (pm-uninstall)
+
+http://search.cpan.org/perldoc?App::pmuninstall

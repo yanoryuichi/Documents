@@ -1,0 +1,35 @@
+﻿# 日本語テキストファイルの操作 - binmode()
+
+すでに開かれているファイルハンドル（STDIN/STDOUTを含む）にPerlIOレイヤを指定する。ファイルハンドルレベルでuft8フラグを付けたり落としたり、文字コードを変換する。
+
+### use UTF8なスクリプト内で標準入力（出力）を使う
+
+```clike
+use utf8;
+binmode STDOUT, ':utf8'; # 'encoding(utf8)'でもよい
+print "あ 京\n";
+```
+
+↑binmodeを使わなければ「Wide character」のシステムエラーが発生する。
+
+```clike
+use utf8;
+binmode STDIN, ':utf8';
+while (<>) {
+   chomp;
+   print "[$_]\n";
+}
+```
+
+### use utf8なスクリプト内で、SJISのテキストファイルを読取り、標準出力へ表示する
+
+```clike
+use utf8;
+binmode STDOUT, ':encoding(utf8)';
+open my $fh, '<', shift;
+binmode $fh, ':encoding(sjis)';
+while ($row = <$fh>) {
+   print $row;
+}
+close $fh;
+```

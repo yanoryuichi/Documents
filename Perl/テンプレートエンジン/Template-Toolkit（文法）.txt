@@ -1,0 +1,148 @@
+﻿#title("Template-Toolkit - 文法")
+# Template-Toolkit (文法)
+
+## 文字列結合
+
+```clike
+[% 'a' _ 'b' %]
+```
+
+http://search.cpan.org/perldoc?Template::Manual::Directives
+
+## IF
+
+```clike
+[% IF foo %]
+   ..............
+[% ELSIF bar %]
+   ..............
+[% ELSE %]
+   ..............
+[% END %]
+```
+
+## 配列
+
+```clike
+[% users.0 %]
+[% users.1 %]
+[% num = users.size %]
+```
+
+## ハッシュ
+### キーを変数にして参照する
+
+```clike
+[% attr = 'age' %]
+[% user.$attr %] # same as [% user.age %]
+```
+
+### ループで参照する
+
+```clike
+[% FOREACH key IN hash.keys %]
+  - [% key %]
+[% END %]
+```
+
+```clike
+[% FOREACH key IN hash.keys.sort %]
+  - [% key %]
+[% END %]
+```
+
+```clike
+[% FOREACH pair IN product.pairs %]
+  - [% pair.key %] / [% pair.value %]
+[% END %]
+```
+
+### 配列・ハッシュのマニュアル
+http://search.cpan.org/perldoc?Template::Manual::VMethods
+
+## ループ
+
+```clike
+[% FOREACH i IN items %]
+   [% i %] [% loop.index() %] # loopオブジェクトはFOREACHに標準で組み込まれたオブジェクト
+[% END %]
+```
+
+```clike
+[% WHILE (user = get_next_user_record) %]
+    [% user.name %]
+[% END %]
+```
+
+### loopオブジェクトのメソッド
+
+- size()  number of elements in the list
+- max()   index number of last element (size - 1)
+- index() index of current iteration from 0 to max()
+- count() iteration counter from 1 to size() (i.e. index() + 1)
+- first() true if the current iteration is the first
+- last()  true if the current iteration is the last
+- prev()  return the previous item in the list
+- next()  return the next item in the list
+
+
+http://search.cpan.org/perldoc?Template::Manual::Directives
+
+## フィルター
+### 改行コードをBRタグへ
+
+```clike
+<p>[% bar | html_line_break %]</p>
+```
+
+### 参考
+http://search.cpan.org/perldoc?Template::Manual::Filters
+
+## コメント
+
+```clike
+[% # this is a comment to the end of line
+   foo = 'bar'
+%]
+
+[%# placing the '#' immediately inside the directive
+    tag comments out the entire directive
+%]
+```
+
+http://search.cpan.org/perldoc?Template
+
+## インクルード・インサート
+TTファイルをインクルード
+
+```clike
+[% INCLUDE header.tt %]
+```
+
+HTMLファイルをインクルード
+
+```clike
+[% INSERT "$DOC_ROOT/footer.html" %]
+```
+
+- $DOC_ROOTはTTをnewする時に設定しておくと良い。
+- インクルードするファイルのパスは、コンフィグで相対・絶対パスの指定をする必要がある。
+- http://search.cpan.org/perldoc?Template::Manual::Config
+
+### 参考
+http://search.cpan.org/perldoc?Template::Manual::Directives
+
+## 関数
+### 配列のjoin()
+
+```clike
+[% items.join(', ') %]
+```
+
+### 配列のサイズ
+
+```clike
+[% results.size %]
+```
+
+http://search.cpan.org/perldoc?Template::Manual::VMethods

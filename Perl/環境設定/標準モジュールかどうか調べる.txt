@@ -1,0 +1,14 @@
+﻿# 標準モジュールかどうか調べる
+
+Module::CoreListを使う。
+
+シェルから、
+
+```clike
+corelist Path::Class
+```
+
+Module::CoreListが標準モジュールになったのは5.9.2からとの事。
+
+## 参考
+http://search.cpan.org/perldoc?Module::CoreList

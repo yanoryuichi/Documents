@@ -1,0 +1,59 @@
+﻿# AUTOLOAD
+
+Fooパッケージにないbaz()メソッドを呼ぶと、代わりにAUTOLOAD()が呼ばれる。AUTOLOAD()ではメソッド名は$AUTOLOADで参照できる。
+
+```clike
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.012;
+
+package Foo;
+
+use Data::Dumper ;
+
+sub new {
+    my $class = shift;
+    bless {@_}, $class;
+}
+
+sub foo {
+    my $self = shift;
+    say "foo()";
+}
+
+sub AUTOLOAD {
+    my (@arg) = @_;
+    our $AUTOLOAD;
+    say 'METHOD: ' . $AUTOLOAD;
+    say 'ARGS: ' . Dumper \@arg;
+}
+
+package main;
+
+my $f = Foo->new;
+
+$f->foo();
+
+$f->baz(1,2,3);
+```
+
+↑を実行すると、結果は↓。
+
+
+```clike
+foo()
+METHOD: Foo::baz
+ARGS: $VAR1 = [
+          bless( {}, 'Foo' ),
+          1,
+          2,
+          3
+        ];
+
+METHOD: Foo::DESTROY
+ARGS: $VAR1 = [
+          bless( {}, 'Foo' )
+        ];
+```

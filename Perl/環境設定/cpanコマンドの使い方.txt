@@ -1,0 +1,74 @@
+﻿# cpanコマンドの使い方
+
+## 設定
+### 設定の確認 
+
+```clike
+cpan> o conf         # 全設定の確認
+cpan> o conf urllist # 個別の設定の確認
+```
+
+### 設定のやり直し
+
+```clike
+cpan> o conf init         # 全設定のやり直し
+cpan> o conf init urllist # 個別の設定のやり直し
+```
+
+### 依存するモジュールを自動的にインストール
+
+```clike
+cpan> o conf prerequisites_policy follow
+```
+
+### インストールディレクトリを指定する
+
+```clike
+bash> PERL5LIB=$HOME/perl-lib cpan                                  # cpan起動
+cpan> o conf makepl_arg "PREFIX=$HOME/perl-lib LIB=$HOME/perl-lib"  # Makefile.plの設定
+cpan> install Foo::Bar                                              # インストール
+cpan> exit
+bash> PERL5LIB=$HOME/perl-lib perl -MFoo::Bar                       # インストールの確認 
+```
+
+### 変更した設定を保存
+
+```clike
+cpan>o conf makepl_arg PREFIX=~/perl
+cpan>o conf commit
+```
+
+### 参考
+http://search.cpan.org/perldoc?CPAN#CONFIGURATION
+
+## 古いバージョンをインストールする
+
+```clike
+cpan> install M/MS/MSERGEANT/DBD-SQLite-1.11.tar.gz
+```
+
+## 強制インストール
+
+```clike
+cpan>force install ABC::XYZ
+```
+
+
+## FTPサーバを変更する
+### 一覧
+
+```clike
+cpan>o conf urllist
+```
+
+### 追加
+
+```clike
+cpan>o conf urllist push ftp://ftp.ring.gr.jp/pub/lang/perl/CPAN/
+```
+
+### 削除
+
+```clike
+cpan>o conf urllist pop ftp://ftp.ring.gr.jp/pub/lang/perl/CPAN/
+```

@@ -1,0 +1,68 @@
+﻿# Email-Senderによるメール送信
+
+スクリプトはEUC-JPで保存する事とする。
+
+```clike
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Email::Sender::Simple qw(sendmail);
+use Email::Simple;
+use Email::Simple::Creator;
+use Encode qw/from_to/;
+
+my $from_name  = '名前';
+my $from_email = 'saburo@example.net';
+my $subject    = '件名';
+my $body       = '本文';
+my @to_emails  = ( 'taro@example.com', 'jiro@example.co.jp' );
+
+my $_from_email = sprintf( '%s <%s>', $from_name, $from_email );
+
+from_to( $_from_email, 'euc-jp', 'MIME-Header-ISO_2022_JP' );
+from_to( $subject,     'euc-jp', 'MIME-Header-ISO_2022_JP' );
+from_to( $body,        'euc-jp', 'iso-2022-jp' );
+
+foreach my $to_email (@to_emails) {
+    my $email = Email::Simple->create(
+        header => [
+            To                          => $to_email,
+            From                        => $_from_email,
+            Subject                     => $subject,
+            'Content-Type'              => 'text/plain; charset=iso-2022-jp',
+            'Content-Transfer-Encoding' => '7bit',
+        ],
+        body       => $body,
+    );
+
+    sendmail($email);
+}
+```
+
+## テスト実行
+
+```clike
+EMAIL_SENDER_TRANSPORT=Print ./1.pl
+```
+
+のようにすると、標準出力にメール情報が表示される。
+
+## MIMEエンコードによるヘッダ行の分割について
+ただし、上のスクリプトでは、件名等が長いと、
+
+```clike
+From: =?ISO-2022-JP?B?GyRCTD5BMBsoQg==?= <test@test.com>
+Subject:
+  =?ISO-2022-JP?B?GyRCN29MPjdvTD43b0w+N29MPjdvTD43b0w+N29MPjdvTD43b0w+GyhC?=
+  =?ISO-2022-JP?B?GyRCN29MPjdvTD43b0w+N29MPjdvTD43b0w+N29MPhsoQg==?=
+Date: Sat, 29 Oct 2011 16:12:36 +0900
+```
+
+のように分割されるが、この改行コードがCRLFな為、プロバイダ（のメールサーバ）によってはメールヘッダとメールボディの処理が上手く出来ずに、ヘッダが本文に混じる事がある。これを避けるにはEmail::Simple::Creatorの_crlf()内の記述をLFに変更する。
+
+## 参考
+
+- http://search.cpan.org/perldoc?Email::Send
+- http://adiary.blog.abk.nu/0213

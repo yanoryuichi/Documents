@@ -1,0 +1,27 @@
+﻿# AnyEvent-HTTP
+
+```clike
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use AnyEvent::HTTP;
+my $cv = AnyEvent->condvar;
+sub done {
+    print $_[1]->{server}, "\n";
+    $cv->end;
+}
+my @url = ("http://www.microsoft.com/","http://www.apple.com/","http://www.google.co.jp/");
+$cv->begin; http_get($url[0], \&done);
+$cv->begin; http_get($url[1], \&done);
+$cv->begin; http_get($url[2], \&done);
+$cv->recv;
+```
+
+```clike
+Apache/2.2.3 (Oracle)
+gws
+Microsoft-IIS/7.5
+```
+
+## 参考
+http://search.cpan.org/dist/AnyEvent-HTTP/

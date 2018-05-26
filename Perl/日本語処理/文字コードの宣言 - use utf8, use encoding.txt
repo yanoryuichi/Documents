@@ -1,0 +1,50 @@
+﻿# 文字コードの宣言 - use utf8, use encoding
+
+そのスクリプトファイルがUTF8フラグ付きである事、スクリプトファイルがどんな文字コードで書かれているかを宣言する。
+
+## 効果
+(1) スクリプト内の文字列をすべてUTF8フラグ付きにする。
+~(2) 標準入力と標準出力を指定した文字コードに変換する。
+~(3) その際、入力についてはUTF8フラグを付け、出力についてはUTF8フラグを落とす。
+### use utf8
+
+```clike
+#!/usr/bin/perl
+use encoding 'utf8';
+```
+
+ではなく、
+
+```clike
+#!/usr/bin/perl
+use utf8;
+```
+
+とすると、(1)のUTF8フラグ付きにする効果は変わらないが、(2)(3)の効果はない。
+### PerlIOレイヤー
+(2)(3)の機能をPerlIOレイヤーと言う。標準入力・標準出力の文字コードを個別に設定する事も可能。この機能はuse encoding以外にもopen()等で使用できる。
+
+## 例
+### スクリプト(EUC) → 標準出力(SJIS)
+
+```clike
+#!/usr/bin/perl
+use encoding 'euc-jp', STDOUT => 'shift_jis';
+$text = '花鳥風月';
+@chars = split '',$text;
+foreach $c (@chars){
+    print $c,"\n";
+}
+```
+
+### 標準入力(EUC)　→ スクリプト(SJIS) → 標準出力(SJIS)
+EUCなターミナルから文字を入力すると、ターミナルにはSJISな文字が返ってくる。
+
+```clike
+#!/usr/bin/perl
+use encoding 'shiftjis', STDIN=>'euc-jp';
+while (<>) {
+    ($char) = split '', $_;
+    print $char,"\n";
+}
+```

@@ -1,0 +1,15 @@
+﻿# JSONで日本語を扱う
+
+```clike
+use JSON;
+
+$text = '日本語';                                  # JSON化したい文字列は、文字コードがEUC-JPでUTF8フラグ無しとする
+$text =  Encode::decode('EUC-JP', $text);          # JSON化する前に、UTF8フラグ有りにしなければならない
+$json = to_json( [ $text, $text ], { utf8 => 1 } );# utf8 => 1 によって、$jsonは文字コードがUTF8でUTFフラグ無しになる
+                                                   # utf8 => 0 だと、$jsonは文字コードがUTF8でUTF8フラグ有りになる
+Encode::from_to($json,'UTF8','EUC-JP');            # 文字コードをUTF8からEUC-JPに戻す
+print "$json\n";
+```
+
+## 参考
+http://kawa.at.webry.info/200801/article_6.html

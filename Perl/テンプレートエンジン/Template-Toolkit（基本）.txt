@@ -1,0 +1,76 @@
+﻿#title("Perl/テンプレート/Template-Toolkit/基本")
+# Template-Toolkit (基本)
+
+テンプレートファイルを読み込み、パラメータを差し替え、表示する。
+
+```clike
+use Template;
+ 
+my $tt = Template->new( {} ) || die "$Template::ERROR\n";
+my $vars = { name => 'TARO' };
+$tt->process('file.tt', $vars);
+```
+
+↓テンプレートファイル（file.tt）
+
+```clike
+hello, [% name %] !
+```
+
+### ファイルハンドルを読み込む場合
+
+```clike
+use Template;
+
+my $tt = Template->new( {} ) || die "$Template::ERROR\n";
+my $vars = { name => 'TARO' };
+$tt->process(\*DATA, $vars);
+__DATA__
+hello, [% name %] !
+```
+
+### 変数を読み込む場合
+
+```clike
+use Template;
+
+my $tt = Template->new( {} ) || die "$Template::ERROR\n";
+my $vars = { name => 'TARO' };
+my $tmpl = 'hello, [% name %] !';
+$tt->process(\$tmpl, $vars);
+```
+
+### 表示せず、結果を変数に入れる場合
+
+```clike
+use Template;
+
+my $tt = Template->new( {} ) || die "$Template::ERROR\n";
+my $vars = { name => 'TARO' };
+my $tmpl = 'hello, [% name %] !';
+my $output = '';
+$tt->process(\$tmpl, $vars, \$output
+```
+
+## UTF8フラグ下で利用する
+
+```clike
+use utf8;
+use Encode;
+use Template;
+
+my $tt = Template->new( {ENCODING => 'utf8'} ) || die "$Template::ERROR\n";
+my $vars = { name => '太郎' };
+my $tmpl = 'こんにちは, [% name %] !';
+my $output = '';
+$tt->process(\$tmpl, $vars, \$output);
+$output = Encode::encode 'utf8', $output;
+print "$output\n";
+```
+
+http://search.cpan.org/perldoc?Template::Provider
+
+## 参考
+
+- http://search.cpan.org/perldoc?Template
+- http://search.cpan.org/perldoc?Template::Manual::Config

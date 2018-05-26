@@ -1,0 +1,126 @@
+﻿# DateTime（高機能だが重い）
+
+## DateTimeオブジェクトを作る
+
+```clike
+$dt = DateTime->from_epoch(epoch => time(), time_zone => 'Asia/Tokyo');
+$dt = DateTime->now(time_zone => 'Asia/Tokyo');
+$dt = DateTime->new( year   => 1945,
+                     month  => 8,
+                     day    => 15,
+                     hour   => 0,
+                     minute => 0,
+                     second => 0,
+                     time_zone => 'Asia/Tokyo',
+                   );
+```
+
+DateTimeオブジェクトを作る場合、基本的にタイムゾーンを指定すること。
+
+### 月末のDateTimeオブジェクトを作る
+
+```clike
+$dt = DateTime->last_day_of_month(year => 2009, month => 2, time_zone => 'Asia/Tokyo');
+print $dt->ymd; # "2009-02-28"
+```
+
+## DateTime::TimeZoneオブジェクトを使い回す
+
+```clike
+$tz = DateTime::TimeZone->new( name => 'local' ); # ローカルPCのタイムゾーンを自動的に取得
+$dt = DateTime->now(time_zone => $tz);
+```
+
+## DateTimeオブジェクトに加算・減算する
+今のオブジェクトを1年後にする。
+
+```clike
+$now = DateTime->now(); # 2008年とすると、
+$now->add(years => 1);  # （引く場合は、substract()）
+print $now->year        # 2009年になる。
+```
+
+今のオブジェクトから1週間を引く。
+
+```clike
+$now = DateTime->now();                             # 2008年11月28日とすると、 
+$a_week_ago = $now - DateTime::Duration(days => 7);
+print $a_week_ago->ymd();                           # 2008年11月21日になる。
+
+```
+
+## DateTime::Durationオブジェクト（期間）を作ってDateTimeオブジェクトに加算・減算する
+期間を使って計算する。
+
+```clike
+$dt2007 = DateTime->new(year=>2007);
+$dt2008 = DateTime->new(year=>2008);
+$duration = $dt2008 - $dt2007;
+$dt2009 = $dt2008 + $duration;
+print $duration->years; # "1"
+print $dt2009->year;    # "2009"
+
+```
+
+## DateTimeオブジェクトを比較する 1
+
+```clike
+$dt2007 = DateTime->new(year=>2007);
+$dt2008 = DateTime->new(year=>2008);
+print "ok" if DateTime->compare($dt2008, $dt2007) ==  1;
+print "ok" if DateTime->compare($dt2008, $dt2008) ==  0;
+print "ok" if DateTime->compare($dt2007, $dt2008) == -1;
+
+```
+
+## DateTimeオブジェクトを比較する 2
+
+```clike
+$duration = $dt2007 - $dt2008;
+$duration->is_positive; # => 0
+$duration->is_negative; # => 1
+$duration->is_zero;     # => 0
+```
+
+## DateTimeオブジェクトからフォーマットされた文字列を作る
+
+```clike
+print $dt->ymd; # 2007-04-01
+print $dt->hms('/'); # 01/02/03
+print $dt->strftime('%Y-%m-%d %H:%M:%S'); # 2007-04-01 01:02:03
+```
+
+先頭を0で埋めない数字を出したい場合は以下のメソッドで別個に取り出す。
+
+## 年・月・日・時・分・秒・エポックタイムを取り出す
+
+```clike
+print $dt->year;
+print $dt->month;
+print $dt->day;
+print $dt->hour;
+print $dt->minute;
+print $dt->second;
+print $dt->epoch;
+```
+
+## フォーマットされた文字列からDateTimeオブジェクトを作る
+DateTime::Format::Strptimeを使う。
+
+```clike
+use DateTime::Format::Strptime;
+$strp = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
+$dt = $strp->parse_datetime('2007-04-01 01:02:03');
+```
+
+http://search.cpan.org/perldoc?DateTime::Format::Strptime
+### strptime
+
+- %Yは4桁の年を要求する。
+- %yは下2桁の年を要求する。すなわち、08（または8）なら2008年と解釈する。
+- すべての%パラメータは、先頭に0があってもなくても、予想通りに解釈する。すなわち、%H:%M:%Sは、10:1:2も10:01:02も同じく10時1分2秒と解釈する。
+
+## 参考
+
+- http://search.cpan.org/perldoc?DateTime
+- http://search.cpan.org/perldoc?DateTime::Duration

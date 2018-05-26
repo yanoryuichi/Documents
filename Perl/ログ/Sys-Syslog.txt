@@ -1,0 +1,15 @@
+﻿# Sys::Syslog
+
+```clike
+use Sys::Syslog;
+
+$program = $0;
+openlog "$program $$", 'ndelay', 'user';         # 'user'もしくはLOG_USER （ファシリティ）
+syslog 'info', 'this is %s', ' a test message';  # 'info'もしくはLOG_INFO （レベル）
+closelog;
+```
+
+## 参考
+
+- http://search.cpan.org/perldoc?Sys::Syslog
+- ファシリティ・レベル http://search.cpan.org/perldoc?Sys::Syslog#CONSTANTS

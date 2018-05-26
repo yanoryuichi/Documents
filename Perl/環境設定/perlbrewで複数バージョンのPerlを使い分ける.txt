@@ -1,0 +1,39 @@
+﻿# perlbrewで複数バージョンのPerlを使い分ける
+
+## perlbrewのダウンロードとインストール
+
+```clike
+curl -kL http://install.perlbrew.pl | bash
+```
+
+```clike
+wget --no-check-certificate -O - http://install.perlbrew.pl | bash
+```
+
+環境変数PERLBREW_ROOTを使ってインストール先を指定する。
+
+## perlbrewの設定ファイルをシェルのRCファイルに追加
+
+```clike
+echo '[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT=$HOME/opt/perl' >> $HOME/.bashrc
+echo '[[ -s "$PERLBREW_ROOT/etc/bashrc" ]] && source "$PERLBREW_ROOT/etc/bashrc"' >> $HOME/.bashrc
+exec bash
+which perlbrew
+```
+
+## perlbrewを使ってPerlをインストール
+
+```clike
+perlbrew available
+perlbrew install perl-5.12.2
+```
+
+## 使用するPerlを今インストールしたバージョンに切り替える
+
+```clike
+perlbrew switch perl-5.12.2
+perl -v
+```
+
+## 参考
+http://www.perlbrew.pl/

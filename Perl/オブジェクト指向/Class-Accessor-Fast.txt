@@ -1,0 +1,38 @@
+﻿# Class::Accessor::Fastを使ってアクセサを作る
+
+Class::Accessor::Fastはクラスにアクセサを提供するモジュール。
+
+```clike
+ package MyClass;
+ use base qw/Class::Accessor::Fast/;
+ __PACKAGE__->mk_accessors(qw/name address/);
+```
+
+```clike
+#!/usr/local/bin/perl
+
+my $obj = MyClass->new( { name => 'taro', address => 'tokyo'} );
+print $obj->name, "\n"; # taro
+$obj->name('jiro');
+print $obj->name, "\n"; # jiro
+```
+
+- $obj->name('jiro')は、$obj->set('name','saburo')でも良い。
+- Class::Accessor::Fastはnew()を提供するので、自分でnew()を書く必要はないが、
+
+```clike
+sub new { $self = shift->SUPER::new(@_); $self->name('default'); return $self } 
+```
+
+あるいは 
+
+```clike
+sub new { $self = bless {}, shift; $self->name('default'); return $self; }
+```
+
+のように自分で書いても良い。
+
+- また、$obj2 = $obj->new() のようなnew()によるインスタンス生成も可能。
+
+## 参考
+http://search.cpan.org/perldoc?Class::Accessor

@@ -1,0 +1,41 @@
+﻿# Class::Data::Inheritableを使ってクラス変数のアクセサを作る
+
+クラス変数のアクセサを作る。すなわち、あるインスタンスのクラス変数の値を変えると、他のインスタンスの値も変わる。
+
+```clike
+package CDI;
+use base qw/Class::Data::Inheritable/;
+__PACKAGE__->mk_classdata( name => 'taro' );
+
+sub new {
+    my $class = shift;
+    my ($args) = (@_);
+    $args ||= {};
+    return bless { %{$args} }, $class;
+}
+```
+
+```clike
+#!/usr/local/bin/perl
+
+my $cdi = CDI->new( { name => 'hanako' } );
+print $cdi->name,"\n";  # taro
+$cdi->name('jiro');
+print $cdi->name,"\n";  # jiro
+my $cdi2 = $cdi;
+$cdi2->name('saburo');
+print $cdi->name,"\n";  # saburo
+print $cdi2->name,"\n"; # saburo
+undef($cdi);
+undef($cdi2);
+$cdi = CDI->new;
+print $cdi->name,"\n";  # saburo
+```
+
+- $cdiを$cdi2へコピーしても、$cdiと$cdi2をundefした後に$cdiを作り直しても、値が受け継がれている。
+- Class::Accessorと比較して、
+- Class::Data::Inheritableにはnew()がないので、自分でnew()を書く。
+- mk_classdata()は1組のハッシュしか受け取らないので、複数のデータを設定する場合、その数の分だけmk_classdata()を書き連ねる。
+
+## 参考
+http://search.cpan.org/perldoc?Class::Data::Inheritable

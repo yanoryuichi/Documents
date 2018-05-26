@@ -1,0 +1,6 @@
+﻿# ディレクトリを再帰的に作成・削除
+
+File::Pathを使う。
+
+## 参考
+http://search.cpan.org/perldoc?File::Path

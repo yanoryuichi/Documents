@@ -1,0 +1,83 @@
+﻿# ワンライナー
+## -e 基本
+### 構造
+
+```clike
+  （記述1）...
+  （記述2）...
+```
+
+### 例
+
+```clike
+$ perl -e 'print "foo"'
+foo
+```
+
+## -n 1行ずつ読み込む
+### 構造
+
+```clike
+while (<>) {
+  （記述1）...
+  （記述2）...
+}
+```
+
+### 例
+
+```clike
+ifconfig eth0 | perl -ne 'print "DEBUG:$1" if /inet addr:(\S+)/'
+```
+
+```clike
+DEBUG: 192.168.0.1
+```
+
+## -p 1行ずつ読み込み、print()する
+### 構造
+
+```clike
+while (<>) {
+  （記述1）...
+  （記述2）...
+  print $_;
+}
+```
+
+###　例
+
+```clike
+cat /etc/passwd | perl -pe 'print $num++ . ": "'
+```
+
+```clike
+0: root:x:0:0:root:/root:/bin/bash
+1: bin:x:1:1:bin:/bin:/sbin/nologin
+2: daemon:x:2:2:daemon:/sbin:/sbin/nologin
+```
+
+
+## -i ファイルを上書きする
+
+```clike
+$ perl -i -p -e 's/a/A/g' sample.txt
+```
+
+sample.txtは内容が修正され、上書きされる。
+以下のようにすると、バックアップファイル（sample.txt.bak）が作成される。
+
+```clike
+$ perl -i.bak -p -e 's/a/A/g' sample.txt
+```
+
+## BEGIN{} END{} 前後に処理を加える
+
+```clike
+$perl -p -e 'BEGIN{ print "/etc/passwd:\n";} print ++$i, ": "; END{print "done.\n";}' /etc/passwd
+/etc/passwd:
+1: root:x:0:0:root:/root:/bin/bash
+2: daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+3: bin:x:2:2:bin:/bin:/bin/sh
+done.
+```

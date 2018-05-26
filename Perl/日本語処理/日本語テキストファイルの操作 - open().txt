@@ -1,0 +1,49 @@
+﻿# 日本語テキストファイルの操作 - open()
+## ファイルを開く
+
+- use openで指定するか、3つの引数を取るopen()を使うか。
+- use openで指定した時は、必ず2つの引数のopen()を使う。でないと、上書きされる。
+
+### use open
+
+```clike
+use open IN => ':utf8';
+open my $in, '<utf.txt' or die;
+```
+
+```clike
+use open IN => ':encoding(euc-jp)';
+open my $in, '<euc.txt' or die;
+```
+
+### 3つの引数を取るopen()
+
+```clike
+open IN, "<:encoding(euc-jp)", "euc.txt";
+```
+
+```clike
+open IN, "<:utf8", "utf.txt";
+```
+
+## ファイルに書き出す
+
+- 書き出す文字列（$text）はUTF8フラグを落としていないと、Perlがwarningを出す。
+- （ただし、ファイルにはUTFな文字列がちゃんと書き込まれている。）
+- 従って、UTFで出力したい場合でも、下のいずれかの方法でUTFフラグを落としてやる必要がある。
+- 書き出す文字列にUTF8フラグがない場合は、何もする必要はない。
+
+### use open
+
+```clike
+use open OUT => ':encoding(shift_jis)';
+open my $out, '>sjis.txt' or die;
+print $out $text;
+```
+
+### 3つの引数を取るopen()
+
+```clike
+open my $out, '>:encoding(shift_jis)', 'sjis.txt' or die;
+print $out $text;
+```

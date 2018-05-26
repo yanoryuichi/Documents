@@ -1,0 +1,174 @@
+﻿# Log:::Log4perl
+
+## ロギングレベル
+
+- DEBUG
+- INFO
+- WARN
+- ERROR
+- FATAL
+
+## easyモード
+
+```clike
+use Log::Log4perl qw/:easy/;
+Log::Log4perl->easy_init($ERROR); # ロギングレベルの設定（出力先は未指定なので、標準エラー出力になる）
+ERROR('##DEBUG##');               # 標準エラー出力へ
+$logger = get_logger();           # ロガーオブジェクトを使って
+$logger->debug('##ERROR##');      # レベルが足りないので出力されない
+```
+
+```clike
+use Log::Log4perl qw/:easy/;
+Log::Log4perl->easy_init({level => $DEBUG, file => '>>test.log'}); # 出力先はtest.logファイル
+DEBUG '##DEBUG##';
+```
+
+## カテゴリを指定して、loggerを使い分ける。
+"MyTest::Test1"や"MyTest::Test2"がカテゴリ。":levels"で$ERRORや$INFOをインポートする。"test2 test"のみ出力される。
+
+```clike
+use Log::Log4perl qw/get_logger :levels/;
+
+app_init();
+do_main();
+
+sub app_init {
+    Log::Log4perl->easy_init();
+    my $test1_logger = get_logger('MyTest::Test1');
+    $test1_logger->level($ERROR);
+    my $test2_logger = get_logger('MyLog::Test2');
+    $test2_logger->level($INFO);
+}
+
+sub do_main {
+    MyTest::Test1->new;
+    MyTest::Test2->new;
+}
+
+package MyTest::Test1;
+use Log::Log4perl qw/get_logger/;
+sub new {
+    my $logger = get_logger('MyTest::Test1');
+    $logger->info('test1 test');
+}
+1;
+
+package MyTest::Test2;
+use Log::Log4perl qw/get_logger/;
+sub new {
+    my $logger = get_logger('MyTest::Test2');
+    $logger->info('test2 test');
+}
+1;
+```
+
+## appenderを指定して、ファイル出力を追加する
+エラー出力には、"test1 test"と"test2 test"が表示される。test.logファイルには、"test1 test"のみ出力される。
+
+$test_logger = get_logger('MyTest')で、親のカテゴリを指定しているので、その子のカテゴリは共にレベルがERRORになっている。
+
+```clike
+use Log::Log4perl qw/get_logger :levels/;
+
+app_init();
+do_main();
+
+sub app_init {
+    Log::Log4perl->easy_init();
+    my $test_logger = get_logger('MyTest');
+    $test_logger->level($ERROR);
+    my $test1_logger = get_logger('MyTest::Test1');
+    my $appender = Log::Log4perl::Appender->new(
+        'Log::Log4perl::Appender::File',
+        filename => 'test.log',
+        mode     => 'append',
+    );
+    $test1_logger->add_appender($appender);
+}
+
+sub do_main {
+    MyTest::Test1->new;
+    MyTest::Test2->new;
+}
+
+package MyTest::Test1;
+use Log::Log4perl qw/get_logger/;
+sub new {
+    my $logger = get_logger('MyTest::Test1');
+    $logger->fatal('test1 test');
+}
+1;
+
+package MyTest::Test2;
+use Log::Log4perl qw/get_logger/;
+sub new {
+    my $logger = get_logger('MyTest::Test2');
+    $logger->error('test2 test');
+}
+1;
+```
+
+## layoutを指定して、フォーマットを修正する
+上のコードのapp_init()で、add_appender()する前に以下のコードを差し込む。
+
+```clike
+my $layout = Log::Log4perl::Layout::PatternLayout->new("%d %p> %F{1}:%L %M - %m%n");
+$appender->layout($layout);
+```
+
+すると、test.logの内容は以下のようになる。
+
+```clike
+2009/03/22 16:43:52 FATAL> 0.pl:37 MyTest::Test1::new - test1 test
+```
+
+## コンフィグファイルで初期化する
+以下の内容で、log4perl.confとして保存する。log4perl.loggerの1つめの値はレベル、2つめの値はappenderを表す。
+
+```clike
+log4perl.logger=FATAL, Screen
+log4perl.logger.MyTest.Test2=DEBUG, Log
+
+log4perl.appender.Screen=Log::Log4perl::Appender::Screen
+log4perl.appender.Screen.stderr=0
+log4perl.appender.Screen.Threshold=FATAL
+log4perl.appender.Screen.layout=Log::Log4perl::Layout::SimpleLayout
+
+log4perl.appender.Log=Log::Log4perl::Appender::File
+log4perl.appender.Log.filename=test.log
+log4perl.appender.Log.mode=append
+log4perl.appender.Log.layout=Log::Log4perl::Layout::SimpleLayout
+```
+
+app_init()を以下のようにして、コンフィグファイルで初期化するようにする。
+
+```clike
+sub app_init {
+    Log::Log4perl::init('log4perl.conf');
+}
+```
+
+MyTest::Test1とMyTest::Test2はFATALレベルでScreenに出力、MyTest::Test2はFileに出力するようになる。
+
+## ログをロテートする
+size=50でファイルサイズKB指定し、max=5で最大5世代までロテートする。
+
+```clike
+log4perl.logger=FATAL, Screen
+log4perl.logger.MyTest.Test2=DEBUG, FR
+
+log4perl.appender.Screen=Log::Log4perl::Appender::Screen
+log4perl.appender.Screen.stderr=0
+log4perl.appender.Screen.Threshold=FATAL
+log4perl.appender.Screen.layout=Log::Log4perl::Layout::SimpleLayout
+
+log4perl.appender.FR=Log::Dispatch::FileRotate
+log4perl.appender.FR.filename=test.log
+log4perl.appender.FR.size=50
+log4perl.appender.FR.max=5
+log4perl.appender.FR.layout=Log::Log4perl::Layout::SimpleLayout
+```
+
+## 参考
+http://search.cpan.org/perldoc?Log::Log4perl

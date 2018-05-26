@@ -1,0 +1,52 @@
+﻿# Coro
+
+
+```clike
+use Coro;
+use LWP::UserAgent;
+
+async {
+    print "Hello, world\n";
+};
+
+my $ua = LWP::UserAgent->new;
+my $res = $ua->get('http://www.goo.ne.jp');
+print $res->title, "\n";
+
+cede;
+```
+
+↓
+
+```clike
+goo
+called
+```
+
+     - -
+
+```clike
+use Coro;
+use LWP::UserAgent;
+
+async {
+    print "Hello, world\n";
+};
+
+cede;
+
+my $ua = LWP::UserAgent->new;
+my $res = $ua->get('http://www.goo.ne.jp');
+print $res->title, "\n";
+```
+
+↓
+
+```clike
+called
+goo
+```
+
+
+## 参考
+http://search.cpan.org/perldoc?Coro

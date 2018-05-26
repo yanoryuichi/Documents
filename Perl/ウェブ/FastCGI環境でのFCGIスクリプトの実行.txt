@@ -1,0 +1,112 @@
+﻿# FastCGI環境でのFCGIスクリプトの実行
+## 前提
+
+- ウェブサーバはApacheとし、FastCGI環境はmod_fastcgiによるものとする。
+- mod_fastcgiによるFCGIスクリプトの実行は、ダイナミック、スタティック、外部サーバの3種類の方法がある。
+- 以下はそれぞれの場合における、Apacheの設定とFCGIスクリプト。
+- FCGIスクリプト count.fcgi(count.pl)は、ブラウザでアクセスすると（http://192.168.0.100/cgi-bin/count.fcgi）、1から始まるカウンターを表示する。FastCGI環境ではプロセスが永続化するので、アクセスの度にカウントアップする。
+
+## ダイナミック
+### httpd.conf
+必要に応じて FastCgiConfig にてパラメータを指定する。ウェブからのアクセスがあった場合にcount.fcgiは起動される。
+
+```clike
+<IfModule mod_fastcgi.c>
+   AddHandler fastcgi-script fcgi
+   # FastCgiConfig
+</IfModule>
+<VirtualHost *:80>
+   ServerAdmin root@localhost
+   ServerName 192.168.0.100
+   DocumentRoot /home/www/htdocs
+   ErrorLog /home/www/logs/error_log
+   CustomLog /home/www/logs/access_log common
+   <Directory />
+       Order Deny,Allow
+       Allow from All
+       Options All
+       AllowOverride All
+   </Directory>
+</VirtualHost>
+```
+
+### count.fcgi
+
+```clike
+#!/usr/local/bin/perl
+
+use FCGI;
+
+my $request = FCGI::Request();
+
+my $count = 0;
+while ( $request->Accept() >= 0 ) {
+    print "content-type: text/html\r\n\r\n";
+    print ++$count;
+}
+```
+
+## スタティック
+### httpd.conf
+ウェブサーバ（再）起動時にcount.fcgiは起動される。
+
+```clike
+<IfModule mod_fastcgi.c>
+   AddHandler fastcgi-script fcgi
+   FastCgiServer /home/www/cgi-bin/count.fcgi -processes 3
+</IfModule>
+```
+
+### count.fcgi
+スクリプトの内容は上と同じ。
+
+## 外部サーバ
+
+UNIXドメインソケットを使って、外部FCGIスクリプトサーバと通信する。
+
+### httpd.conf
+FastCgiExternalServerを指定する。
+
+```clike
+<IfModule mod_fastcgi.c>
+   AddHandler fastcgi-script fcgi
+   FastCgiExternalServer /home/www/htdocs/count.fcgi -socket /tmp/fastcgi.socket
+</IfModule>
+（略）
+```
+
+### count.pl
+
+```clike
+#!/usr/local/bin/perl
+
+use FCGI;
+
+umask 000;
+my $socket = FCGI::OpenSocket( "/tmp/fastcgi.socket", 5 );
+my $request = FCGI::Request( \*STDIN, \*STDOUT, \*STDERR, \%ENV, $socket );
+
+my $count = 0;
+while ( $request->Accept() >= 0 ) {
+    print "content-type: text/html\r\n\r\n";
+    print ++$count;
+}
+FCGI::CloseSocket($socket);
+```
+
+### 説明
+まずシェルからcount.plを起動する（count.plの設置場所はどこでも良い）。この状態で、ブラウザで http://192.168.0.100/count.fcgi にアクセスする。
+count.fcgiはファイルとして存在しない。実際には、ソケットファイル /tmp/fastcgi.socket で通信する。
+
+また、UNIXドメインソケットでなく、TCPポートを使って通信するには、Apacheの設定とFCGIスクリプトを以下のようにする。これでローカルホストの8000番ポートを使って通信するようになる。
+
+```clike
+FastCgiExternalServer /home/www/htdocs/count.fcgi -host localhost:8000
+```
+
+```clike
+my $socket = FCGI::OpenSocket( ":8000", 5 );
+```
+
+## 参考
+http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html

@@ -1,0 +1,69 @@
+﻿# blessを使ったオブジェクト指向 - 詳細
+
+- ↓を見る。
+- http://blog.livedoor.jp/dankogai/archives/50816007.html
+- ↓要するにこんな感じで書くといいそうだ。
+
+### 親クラス
+
+```clike
+package MyClass;
+
+sub new {
+    my $thing = shift;
+    my $class = ref $thing || $thing;
+    my $self  = bless {@_} , $class;
+    $self->init() if $self->can('init');
+    $self;
+}
+
+our %default = ( name => 'anonymous' );
+
+sub init {
+    my $self = shift;
+    $self->{$_} = $default{$_} for keys %default;
+    $self;
+}
+
+sub name {
+    my $self = shift;
+    $self->{name} = shift if @_;
+    return $self->{name};
+}
+
+```
+
+- new がコンストラクタ。
+- "my $class = ref $thing || $thing" は Class->new ではなく、$object->new() で既存のオブジェクトを生成できるように。
+- can()はUNIVERSAL メソッド。メソッドが存在するか調べる。詳しくは、http://search.cpan.org/perldoc?perlobj#Default_UNIVERSAL_methods_。
+- name()はアクセサ。
+
+### 子クラス
+
+```clike
+package MyClass::Sub;
+
+our @ISA = qw/MyClass/;
+
+our %default = ( 'name' => 'taro' );
+
+sub init {
+    my $self = shift;
+    $self->SUPER::init();
+    $self->{$_} = $default{$_} for keys %default;
+}
+```
+
+- new()は@ISAで親クラスを継承して使っている。
+- init()では $self->SUPER::init() で親クラスのinit()を呼び出している。SUPERは親クラスを表す疑似クラス。詳しくは、http://search.cpan.org/perldoc?perlobj#Method_Invocation____ 。
+
+### クラスを利用
+
+```clike
+#!/usr/local/bin/perl
+
+my $obj = MyClass::Sub->new( name => 'jiro' );
+print $obj->name, "\n";
+$obj->name('saburo');
+print $obj->name, "\n";
+```

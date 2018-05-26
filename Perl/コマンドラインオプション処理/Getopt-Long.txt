@@ -1,0 +1,77 @@
+﻿#Getopt::Long
+
+##普通の使い方
+
+```clike
+use Getopt::Long;
+
+$debug;
+GetOptions('debug' => \$debug);
+print "$debug\n";
+print $ARGV[0];
+```
+
+```clike
+> ./1.pl --debug 
+1
+> ./1.pl --debug2
+Unknown option: debug2
+> ./1.pl foo
+foo
+```
+
+## 引数を取る
+
+```clike
+use Getopt::Long;
+
+$year;
+$debug;
+GetOptions('year=i' => \$year,
+           'debug=s' => \$debug);
+print "$year\n$debug\n";
+```
+
+```clike
+> ./1.pl --year 2006 --debug test
+2006
+test
+```
+
+##--nodebugみたいに否定・肯定を判定する
+
+```clike
+#!/usr/bin/perl
+
+use Getopt::Long;
+
+$debug;
+GetOptions('debug!' => \$debug);
+print "$debug\n";
+```
+
+```clike
+> ./1.pl --debug
+1
+> ./1.pl --nodebug
+0
+```
+
+## カウントする
+
+```clike
+#!/usr/bin/perl
+
+use Getopt::Long;
+
+$debug;
+GetOptions('debug+' => \$debug);
+print "$debug\n";
+```
+
+```clike
+> ./1.pl --debug
+1
+> ./1.pl --debug --debug
+2
+```

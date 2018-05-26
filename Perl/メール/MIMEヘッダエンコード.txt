@@ -1,0 +1,25 @@
+﻿# MIMEヘッダエンコード
+
+## エンコード
+
+```clike
+use utf8;
+use Encode qw/from_to encode decode/;
+
+my $subject = 'マクドナルドのおすすめ情報';
+my $_subject =  encode 'utf8', $subject;
+from_to($_subject, 'utf8', 'MIME-Header-ISO_2022_JP');
+print "$_subject\n";
+```
+
+## デコード
+
+```clike
+use utf8;
+use Encode qw/from_to encode decode/;
+
+my $str = '=?iso-2022-jp?B?GyRCJV4lLyVJJUolayVJJE4kKiQ5JDkkYT5wSnMbKEI=?=';
+my $_str = decode 'MIME-Header', $str;
+$_str = encode 'euc-jp', $_str;
+print "$_str\n";
+```

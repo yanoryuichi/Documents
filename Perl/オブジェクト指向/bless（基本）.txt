@@ -1,0 +1,56 @@
+﻿# blessを使ったオブジェクト指向 - 基本
+
+## クラスの宣言
+
+```clike
+package Foo;
+（略）
+1;
+```
+
+## コンストラクタとインスタンスの生成
+
+```clike
+sub new {
+    my $class = shift;
+    bless {@_}, $class;
+}
+```
+
+```clike
+#!/usr/bin/perl
+use Foo;
+$foo = Foo->new(name => 'taro', age => 18)
+print $foo->{name}; # "taro"
+```
+
+## デストラクタ
+
+```clike
+sub DESTROY {
+    my $self = shift;
+    $self->{fh}->close;
+}
+```
+
+## 継承
+
+```clike
+package Foo::Bar;
+use parent 'Foo';
+（略）
+1;
+```
+
+最近はuse baseじゃなくて、use parent推奨らしい。
+
+## コンストラクタで親クラスのコンストラクタを呼ぶ
+
+```clike
+sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new(@_);
+    $self->{foo} = 'var';
+    return $self;
+}
+```

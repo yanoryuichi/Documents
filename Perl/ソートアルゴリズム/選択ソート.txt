@@ -1,0 +1,19 @@
+﻿# 選択ソート
+
+```clike
+sub selection_sort {
+    my @nums = @_;;
+    for (my $x = 0; $x < @nums; $x++) {
+        my $min = $x;
+        for (my $i = $x; $i < scalar @nums; $i++) {
+            if ($nums[$i] < $nums[$min]) {
+                $min = $i;
+            }
+        }
+        my $temp = $nums[$x];
+        $nums[$x] = $nums[$min];
+        $nums[$min] = $temp;
+    }
+    say Dumper \@nums;
+}
+```

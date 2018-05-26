@@ -1,0 +1,61 @@
+﻿# パッケージ（オブジェクト）を調べる
+## パッケージにある全てのメソッドを調べる
+シンボルテーブルをダンプする。
+
+```clike
+use DateTime;
+use Data::Dumper;
+print Dumper \%Data::Dumper::;
+```
+
+## オブジェクトにメソッドがあるか調べる
+
+```clike
+use DateTime;
+use UNIVERSAL qw/can/;
+$dt = DateTime->now;
+if (can($dt, 'year')) {
+   print "dt has 'year()'\n"
+}
+```
+
+## オブジェクトがパッケージを継承しているか調べる
+
+```clike
+use DateTime;
+use UNIVERSAL qw/isa/;
+$dt = DateTime->now;
+if (isa($dt, 'DateTime')) {
+   print "dt isa 'DateTime'\n"
+}
+```
+
+## オブジェクトのメソッドがどのパッケージにあるのか調べる
+
+```clike
+use DateTime;
+use UNIVERSAL::which;
+$dt = DateTime->now;
+print $dt->which('year') . "\n";
+print $dt->which('which') . "\n";
+```
+
+## 継承しているクラスを調べる
+パッケージ変数@ISAをダンプする。
+
+```clike
+use Foo::Bar;
+use Data::Dumper;
+print Dumper @{Foo::Bar::ISA};
+```
+
+インスタンスから@ISAを参照する。
+
+```clike
+my $bar = Foo::Bar->new;
+no strict 'refs';
+print Dumper @{ ref($bar) . "::ISA" };
+```
+
+## Class::Inspector
+http://search.cpan.org/dist/Class-Inspector/

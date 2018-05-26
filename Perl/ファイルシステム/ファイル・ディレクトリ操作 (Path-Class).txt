@@ -1,0 +1,12 @@
+﻿# ディレクトリ内のファイル（ディレクトリ）を全削除
+Path::Classを使う。
+
+```clike
+my $dir = dir('tmp');
+foreach my $ent ($dir->children) {
+   $ent->remove();
+}
+```
+
+## 参考
+http://search.cpan.org/perldoc?Path::Class

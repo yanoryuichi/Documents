@@ -1,0 +1,42 @@
+﻿# 文字コードの操作 - Encode
+
+## UTF8フラグなし → UTF8フラグ付き
+
+```clike
+my $str = Encode::decode('sjis',$bytes); # $bytesの文字コードはSJISと仮定する
+```
+
+
+## UTF8フラグ付き → (文字コード変換）→ UTF8フラグなし
+
+```clike
+my $bytes = Encode::encode('euc-jp',$str); # $bytesの文字コードはEUC-JPに変換される
+```
+
+## UTF8フラグなし → （文字コード変換）→ UTF8フラグなし
+
+```clike
+Encode::from_to($bytes,'sjis','euc-jp'); # $bytesの文字コードはSJISからEUC-JPへ破壊的に変換される
+```
+
+## どの文字コードか調べる
+
+```clike
+my $enc = Encode::Guess::guess_encoding($text,qw/euc-jp sjis/);  # $textはUTFフラグ付きでもなしでもよい
+                                                                 # utf-8はデフォルトなので指定は不要
+print $enc->name,"\n";                                           # "euc-jp"などと表示される
+```
+
+## UTF8フラグ付き →（文字コード変換）→ UTF8フラグ付き
+
+```clike
+$text = Jcode->new($text,'utf-8')->euc; # UTF8からEUC-JPへの変換される
+                                        # $textはUTFフラグ付きでもなしでもよい
+```
+
+## 参考（perldoc）
+
+- [[Encode>http://search.cpan.org/perldoc?Encode]]
+- [[Encode::Guess>http://search.cpan.org/perldoc?Encode::Guess]]
+- [[Jcode>http://search.cpan.org/perldoc?Jcode]]
+- http://perl-users.jp/articles/advent-calendar/2009/casual/10.html

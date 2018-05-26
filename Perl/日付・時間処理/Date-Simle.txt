@@ -1,0 +1,49 @@
+﻿# Date::Simple（日付のみだが扱い易い）
+
+```clike
+use Date::Simple qw/date/;
+```
+
+### 作成
+
+```clike
+my $today    = Date::Simple->today;
+my $date1    = Date::Simple->new('2000-01-01');
+my $date2    = Date::Simple->new( 2000, 1, 1 );
+my $date3    = date('2000-01-01');
+my $undef    = Date::Simple->new( 2000, 13, 32 );
+```
+
+### 表示
+
+```clike
+say $date->format('%Y/%m/%d');
+say $date->year;
+say $date->month;
+say $date->day;
+say $date->day_of_week; # 0:日 ... 6:土
+```
+
+## 加算減算
+
+```clike
+my $tomorrow = Date::Simple->today + 1;
+say date(2000-01-01) - date('1999-01-01'); # 365
+```
+
+### 比較
+
+```clike
+if ( $date == "2000-01-01" ) { };
+if ( $date > [ 2000, 1, 1 ] ) { };
+my @sorted = sort { $a <=> $b }
+  (
+    date( [ 2000, 1, 3 ] ),
+    date( [ 2000, 1, 1 ] ),
+    date( [ 2000, 1, 2 ] )
+  );
+```
+
+
+## 参考
+http://search.cpan.org/perldoc?Date::Simple

@@ -1,0 +1,101 @@
+﻿# HTML::Template
+## new()
+
+```clike
+$template = HTML::Template->new(
+path => ['/home/www/tmpl_dir'],
+filename => 'index.tmpl',
+die_on_bad_params => 0,
+global_vars => 1)
+```
+
+##変数
+HTMLエスケープ
+
+```clike
+<input name=param type=text value="<TMPL_VAR ESCAPE=HTML NAME="PARAM">">
+```
+
+URLエスケープ
+
+```clike
+<input name=param type=text value="<TMPL_VAR ESCAPE=URL NAME="PARAM">"
+```
+
+デフォルト値
+
+```clike
+The <TMPL_VAR NAME=WHO DEFAULT=devil> gave me a taco.
+```
+
+##ループ
+
+```clike
+<TMPL_LOOP NAME=EMPLOYEE_INFO>
+   Name: <TMPL_VAR NAME=NAME> <br>
+   Job:  <TMPL_VAR NAME=JOB>  <p>
+</TMPL_LOOP>
+```
+
+```clike
+$template->param(EMPLOYEE_INFO => [ 
+      { name => 'Sam', job => 'programmer' },
+      { name => 'Steve', job => 'soda jerk' },
+      ]
+);
+```
+
+## IF/ELSE/UNLESS
+
+```clike
+<TMPL_IF BOOL>
+  Some text that is included only if BOOL is true
+<TMPL_ELSE>
+  Some text that is included only if BOOL is false
+</TMPL_IF>
+```
+
+以下はループが空の時に機能する
+
+```clike
+<TMPL_UNLESS LOOP_ONE>
+  ループは空です
+</TMPL_UNLESS>
+```
+
+##インクルード
+
+```clike
+<TMPL_INCLUDE NAME="filename.tmpl">
+```
+
+filename.tmplのファイルパスは、
+
+- インクルードするテンプレートと同じ位置からの相対パス
+- /から始る絶対パス
+- new()した時にpath => 'tmpl_dir'でテンプレートディレクトリを指定
+
+のいずれかの方法で指定する。
+
+## new()のオプション
+
+###loop_context_vars
+
+```clike
+<TMPL_LOOP NAME="FOO">
+   <TMPL_IF NAME="__XXXXX__">
+     XXXXにマッチした内容の文言    </TMPL_IF>
+</TMPL_LOOP>
+```
+
+- __first__
+- __last__
+- __inner__
+- __odd__
+- __counter__
+
+###die_on_bad_params
+$template->param(param_name => 'value')してて、テンプレートに<TMPL_VAR NAME=param_name>がなくてもエラーにならない。よく使う。
+
+###global_vars
+TMPL_LOOP>内で、グローバルな<TMPL_VAR>を参照できる。よく使う。

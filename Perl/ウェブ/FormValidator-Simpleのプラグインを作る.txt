@@ -1,0 +1,27 @@
+﻿# FormValidator-Simpleのプラグインを作る
+
+```clike
+package MyFVS;
+
+use strict;
+use warnings;
+use FormValidator::Simple::Constants;
+
+sub MY_VALIDATION {
+   my ($self, $params, $args) = @_;
+   my ($year, $month, $day) = ($params->[0], $params->[1], $params->[2]);
+   my ($foo, $bar) = ($args->[0], $args->[1]);
+   return TRUE;
+}
+
+1;
+```
+
+```clike
+FormValidator::Simple->load_plugin('MyFVS');
+my $result = FormValidator::Simple->check(
+   $q => [
+       { my_date => ['year','month','day'] } => [ ['MY_VALIDATION', 'foo', 'bar'] ]
+   ]
+);
+```

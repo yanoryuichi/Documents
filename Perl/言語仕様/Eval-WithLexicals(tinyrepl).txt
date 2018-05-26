@@ -1,0 +1,3 @@
+﻿# Eval::WithLexicals (tinyrepl)
+
+- http://search.cpan.org/perldoc?Eval::WithLexicals

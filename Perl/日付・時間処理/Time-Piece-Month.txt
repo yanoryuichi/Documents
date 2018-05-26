@@ -1,0 +1,14 @@
+﻿# Time::Piece::Month（来月を求める）
+
+```clike
+use Time::Piece;
+use TIme::Piece::Month;
+
+my $this_month  = Time::Piece::Month->new( Time::Piece->new() );
+my $month200201 = Time::Piece::Month->new("2002-01-03");
+
+my @next_month_dates = $this_month->next_month->dates();
+my $next_month_1st   = [ $this_month->next_month->dates() ]->[0];
+
+say $next_month_1st->ymd; # "20XX-XX-01"
+```

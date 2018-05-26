@@ -1,0 +1,43 @@
+﻿# CSV入出力
+
+## CSV読取り
+
+```clike
+use utf8;
+binmode STDOUT, 'encoding(utf8)';
+use Text::CSV_XS;
+
+my $file = $ARGV[0];
+my $csv = Text::CSV_XS->new( { binary => 1, eol => "\r\n" } );
+open my $io, "<:encoding(sjis)", $file or die $!;
+while ( my $row = $csv->getline($io) ) {
+   my ( $id, $name ) = @$row;
+   print "$id $name\n";
+}
+close $io;
+$csv->eof or die $csv->error_diag();
+```
+
+- CSVファイルは文字コードSJIS、改行コードCRLFとし、画面端末はUTF8とする。
+
+## CSV書き出し
+
+```clike
+my @rows = (
+   [ '"1"', "a,b", "c\nd" ],
+   [ '"2"', "a,b", "c\nd" ],
+   [ '"3"', "a,b", "c\nd" ],
+);
+my $csv = Text::CSV->new( { binary => 1 } );
+open( my $fh, '>:encoding(utf8)', "test.csv" ) or die $!;
+foreach my $r (@rows) {
+   $csv->combine(@$r);
+   say $fh $csv->string();
+}
+```
+
+
+
+## 参考
+
+- [[Text::CSV_XS>http://search.cpan.org/perldoc?Text::CSV_XS]]

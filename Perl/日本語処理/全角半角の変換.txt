@@ -1,0 +1,20 @@
+﻿# 全角半角の変換
+
+## UTF8フラグ付きの環境でuse utf8な場合
+Lingua::JA::Kanaのzenkaku2hankaku()等を使う。
+
+## UTF8フラグ付きの環境でuse encoding 'euc-jp'な場合
+
+```clike
+$str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/;
+```
+
+みたいにtrで変換する。
+
+## UTF8フラグ付きの環境じゃない場合
+
+```clike
+Jcode->new($str, 'euc-jp')->tr('Ａ-Ｚａ-ｚ０-９','A-Za-z0-9');
+```
+
+Jcodeを使う。

@@ -1,0 +1,115 @@
+﻿# AnyEvent::Timer
+
+
+## 例1
+
+```clike
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.012;
+use AnyEvent;
+
+my $cv = AnyEvent->condvar;
+$cv->cb(
+    sub {
+        say "callback is called.";
+    }
+);
+my $timer;
+$timer = AnyEvent->timer(
+    after    => 3,
+    interval => 0,
+    cb       => sub {
+        say '3 secs passed.';
+        undef $timer;
+        $cv->send;
+    }
+);
+say "Start.";
+$cv->recv;
+say "End.";
+```
+
+- メイン処理がメインループに相当し、AnyEvent->timer()のcbで指定している関数ブロックがイベントループ。この関数ブロックをウォッチャーとも言う。
+- メインループの$cv->recvで、イベントループで$cv->sendするのを「待つ」。が、$cv->recvを削除すると、何も待つものがないので、イベントループは実行されない。
+
+## 例2
+
+
+
+```clike
+use strict;
+use warnings;
+use 5.012;
+use AnyEvent;
+
+my @after = (2,3,1,4);
+my $cv = AnyEvent->condvar;
+$cv->cb(
+    sub {
+        say "callback is called.";
+    }
+);
+foreach my $after (@after) {
+    $cv->begin;
+    my $timer;
+    $timer = AnyEvent->timer(
+        after    => $after,
+        interval => 0,
+        cb       => sub {
+            say "$after secs passed.";
+            undef $timer;
+            $cv->end;
+        }
+    );
+}
+say "Start.";
+$cv->recv;
+say "End.";
+```
+
+- $cv->beginでフラグを上げて、$cv->endでフラグを落とす。
+- 全部フラグが落ちると、メインループのrecvに戻る。
+
+## 例3
+
+```clike
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.012;
+use AnyEvent;
+
+sub add {
+    my ( $x, $y, $cv ) = @_;
+    my $timer;
+    $timer = AnyEvent->timer(
+        after    => 3,
+        interval => 0,
+        cb       => sub {
+            $cv->send($x + $y);
+            undef $timer;
+        }
+    );
+}
+my $cv = AnyEvent->condvar;
+$cv->cb(
+    sub {
+        my ($result) = $cv->recv;
+        say "Resut = $result";
+    }
+);
+add( 3, 2, $cv );
+say "Start.";
+$cv->recv;
+say "End.";
+```
+
+- ウォッチャーにcondvarを渡して、ウォッチャー内でsend()する時に結果を返す。
+- そして、結果はコールバックに渡される。
+
+## 参考
+http://www.slideshare.net/lestrrat/perl-4925529

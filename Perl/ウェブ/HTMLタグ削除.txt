@@ -1,0 +1,9 @@
+﻿# HTMLタグ削除
+
+```clike
+use HTML::Scrubber;
+my $scrubber = HTML::Scrubber->new();
+print $scrubber->scrub('<html><body><p>あいうえお</p><p>かきくけこ</p></body></html>');  # "あいうえおかきくけこ"
+```
+
+http://search.cpan.org/perldoc?HTML::Scrubber

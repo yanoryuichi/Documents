@@ -1,0 +1,65 @@
+﻿# Time::Piece（低機能だが軽い）
+
+## Time::PieceとTime::Seconds
+
+Time::Piece
+: 日付・時刻（タイムスタンプ）を表す。
+
+Time::Seconds
+: 時間（秒）を表す。
+
+## Time::Pieceオブジェクトを作る
+
+```clike
+my $now = Time::Piece->localtime;
+my $tp  = Time::Piece->localtime->strptime( '2000-04-01 00:00:00', '%Y-%m-%d %H:%M:%S' );
+
+say $tp->ymd; # "2000-04-01"
+say $tp->hms; # "00:00:00"
+```
+
+### 曜日を和名で
+
+```clike
+$tp->day_list(qw/日 月 火 水 木 金 土/);
+say $tp->wdayname; # "土"
+```
+
+### localtime() と gmtime()
+localtime()はタイムゾーンを考慮したTime::Pieceオブジェクトを返す（日本の場合は+9時間）。Time::Pieceで時間だけを扱いたい場合、時間の計算をしたい場合などはgmtime()の方が都合がよい。当日25時0分0秒を翌日1時0分0秒と表したい場合だとか。
+
+```clike
+my $gt = Time::Piece->gmtime( 25 * 60 * 60 );
+say $gt->ymd; # 1970-01-02
+say $gt->hms; # 01:00:00
+
+my $lt = Time::Piece->localtime( 25 * 60 * 60 );
+say $lt->ymd; # 1970-01-02
+say $lt->hms; # 10:00:00
+```
+
+## Time::Seconds
+### 翌日を求める
+
+```clike
+my $tp = Time::Piece->localtime->strptime( '2000-04-01 00:00:00', '%Y-%m-%d %H:%M:%S' );
+$tp += ONE_DAY;
+say $tp->ymd; # 2000-04-02
+say $tp->hms; # 00:00:00
+```
+
+### 翌月は求まらない
+
+```clike
+my $tp = Time::Piece->localtime->strptime( '2000-01-01 00:00:00', '%Y-%m-%d %H:%M:%S' );
+$tp += ONE_MONTH;
+say $tp->ymd; # 2000-01-31
+say $tp->hms; # 10:29:04
+```
+
+ONE_MONTHが固定値（2629744）を使ってるから。翌月を求めたいなら、DateTimeなどの他のモジュールを使う。ONE_MONTH他については[[Time::Seconds>http://search.cpan.org/perldoc?Time::Seconds]]を参照。
+
+## 参考
+
+- http://search.cpan.org/perldoc?Time::Piece
+- http://search.cpan.org/perldoc?Time::Seconds

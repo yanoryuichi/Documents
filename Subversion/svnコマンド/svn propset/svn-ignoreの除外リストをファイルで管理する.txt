@@ -1,0 +1,65 @@
+﻿# svn:ignoreの除外リストをファイルで管理する
+
+## 1. 除外設定をしたいディレクトリに移動する
+
+```bash
+cd /home/repos/foo/bar
+```
+
+## 2. 除外リストファイルを作る
+
+```bash
+vi .svnignore 
+```
+
+```bash
+.svnignore
+*.gif
+*.jpg
+```
+
+ファイル名は何でもよい。
+
+## 3. 除外設定をコミットする
+
+```bash
+svn propset svn:ignore -R -F .svnignore .
+svn commit .
+```
+
+## 4. 除外リストを更新する
+
+```bash
+vi .svnignore
+```
+
+```bash
+.svnignore
+*.gif
+*.jpg
+*.pdf
+```
+
+## 5. 更新した除外設定をコミットする
+
+```bash
+svn propset svn:ignore -R -F .svnignore .
+svn commit .
+```
+
+## 説明
+
+- 最初に1から3まで行う。
+- 除外リストを更新する必要があったら、4-5を行う。さらに更新する必要があったら、4-5を再度行う。
+
+## 特定のサブディレクトリに対してsvn:ignoreを設定する
+
+- svn propset svn:ignore -R すると全てのサブディレクトリにpropsetするので、必要なサブディレクトリが決まっている場合、そのディレクトリまで降りて、そこでsvn:ignoreを指定する。
+- findコマンドを使って以下のようにする。
+
+```bash
+find . -type d -name 'img' -o -name 'css' | xargs -i svn propset svn:ignore -F .svnignore {}
+```
+
+## 参考
+http://www.caldron.jp/~nabetaro/svn/svnbook-1.7/html-chunk/svn.ref.svn.c.propset.html

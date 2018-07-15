@@ -1,0 +1,53 @@
+﻿# netsh - TCP/IP制御
+
+## 対話式
+
+```powershell
+C:\Users\taro>netsh
+netsh>interface
+netsh interface>ip
+netsh interface ipv4>show addresses
+```
+
+```powershell
+インターフェイスの構成 "ローカル エリア接続"
+  DHCP 有効:                         はい
+  IP アドレス:                        192.168.0.10
+```
+
+## 設定の確認
+
+```powershell
+netsh interface ip show config
+```
+
+## 固定IPアドレスの設定
+
+```powershell
+netsh interface ip set address "ローカル エリア接続" ^
+          static 192.168.0.50 255.255.255.0 192.168.0.1
+```
+
+## DHCPの設定
+
+```powershell
+netsh interface ip set address "ローカル エリア接続" dhcp
+```
+
+## DNSサーバの設定
+
+```powershell
+netsh interface ip set dns "ローカル エリア接続" static 192.168.0.1
+```
+
+### DNSサーバの追加
+
+```powershell
+netsh interface ip add dns "ローカル エリア接続" 192.168.0.2
+```
+
+## リンク速度の確認
+出来ない？PowerShellのGet-NetAdapterを使う。
+
+## 参考
+http://www.atmarkit.co.jp/fwin2k/win2ktips/1264netship/netship.html

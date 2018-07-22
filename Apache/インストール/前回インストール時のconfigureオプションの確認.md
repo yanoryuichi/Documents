@@ -1,0 +1,3 @@
+﻿# 前回インストール時のconfigureオプションの確認
+
+Apacheソースディレクトリ直下のconfig.statusを見る。mod_sslをインストールした時は、mod_sslソースディレクトリ以下のそれを見ること。
